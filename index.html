@@ -107,7 +107,7 @@
                 <section>
                   <h2>JSR223 Leaks!</h2>
                   <ul>
-                      <li><a href="https://issues.apache.org/jira/browse/GROOVY-7683">Memory leak when using Groovy as JSR-223 scripting language.</a>
+                      <li><a href="https://issues.apache.org/jira/browse/GROOVY-7683">GROOVY-7683:Memory leak when using Groovy as JSR-223 scripting language.</a>
                       <li>7.400 GroovyClassLoaders в хипе
                   </ul>
                 </section>
@@ -217,8 +217,12 @@ wrapped.run()
                   </code><pre>
                 </section>
                 <section>
+                  <h2>Wait, what? toString?</h2>
+                  <p>Порой приведение объекта в скрипте к строке вело к StackOverflow, поэтому переопределяем toString()</p>
+                </section>
+                <section>
                   <h2>fix legacy</h2>
-                  <pre><code data-trim class="groovy">
+                  <pre><code data-trim class="groovy" contenteditable>
                     import static org.codehaus.groovy.runtime.InvokerHelper.toMapString;
 class Init{
     static
@@ -280,7 +284,7 @@ wrapped.run();
                   </ul>
                 </section>
                 <section>
-                  <h2>ClassInfo</h2>
+                  <h3>org.codehaus.groovy.reflection.ClassInfo</h3>
                   <pre><code class="java">
               public class ClassInfo {
                 ...
@@ -293,15 +297,15 @@ wrapped.run();
                   <p class="fragment">Хранится всё это в GroovyClassValue</p>
                 </section>
                 <section>
-                  <h2>Consequences</h2>
+                  <h2>Repercussion</h2>
                   <img src="img/scriptClassInfo.png">
                 </section>
                 <section>
-                  <h2>Consequences</h2>
+                  <h2>Repercussion</h2>
                   <img src="img/cachedMethod.png">
                 </section>
                 <section>
-                  <h2>Consequences</h2>
+                  <h2>Repercussion</h2>
                   <img src="img/alotScriptClasses.png">
                   <p>В данном примере 3300 таких</p>
                 </section>
@@ -342,7 +346,7 @@ public class SimpleTemplateEngine {
                   <h2>Solution</h2>
                   <p>Чистим ссылки сами</p>
                   <pre><code class="java">
-private void removeGroovyClass(final Class<?> scriptClass,
+private void removeGroovyClass(final Class&lt?&gt scriptClass,
                             final MetaClassRegistry metaClassRegistry)
 {
     metaClassRegistry.removeMetaClass(scriptClass);
