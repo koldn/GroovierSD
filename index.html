@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Groovier SD</title>
+
+        <meta name="description" content="Groovier SD">
+        <meta name="author" content="Dmitriy Kolmogortsev">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/beige.css" id="theme">
+
+        <link rel="stylesheet" href="css/hljs/vs.css" id="highlight-theme">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+
+        <style>
+.reveal .slide-number {
+    font-size:22pt;
+    color:black;
+}
+
+.reveal pre {
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.reveal pre code{
+    color: black;
+    background: none;
+    box-shadow: none;
+    max-height: none;
+}
+
+.reveal section img {
+    border: none;
+    box-shadow: none;
+}
+
+.reveal pre code {
+    overflow: hidden;
+}
+
+.reveal .footer {
+	font-size:22pt;
+	color:black;
+
+	position: absolute;
+	left: 35%;
+	bottom: 0.5em;
+}
+        </style>
+    </head>
+
+    <body>
+
+        <div class="reveal">
+            <div class="footer">
+                NAUMEN, Колмогорцев Дмитрий
+            </div>
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <h2>Groovier SD4</h2>
+                    <p>
+                        <small>
+                        Колмогорцев Дмитрий / <a href="mailto:dkolmogortsev@naumen.ru">dkolmogortsev@naumen.ru</a>
+                        <br/>
+                        <br/>
+                        </small>
+                    </p>
+                </section>
+                <section>
+                    <h2>SD4 Experience</h2>
+                </section>
+                <section>
+                  <h2>A long time ago in a galaxy far, far away...</h2>
+                </section>
+                <section>
+                  <h3>Java 8 migration</h3>
+                  <ul>
+                    <li class="fragment">OOM Killer
+                    <li class="fragment">Native memory allocation (malloc) failed to allocate...
+                  </ul>
+                </section>
+                <section data-background-image="img/groovy.gif">
+                </section>
+                <section>
+                  <h2>JSR223 Leaks!</h2>
+                  <ul>
+                      <li><a href="https://issues.apache.org/jira/browse/GROOVY-7683">Memory leak when using Groovy as JSR-223 scripting language.</a>
+                      <li>7.400 GroovyClassLoaders в хипе
+                  </ul>
+                </section>
+                <section>
+                	<h2>Meanwhile...</h2>
+                    <ul>
+                        <li class="fragment">Появился большой клиент, где многое сделано скриптами
+                        <li class="fragment">При простой операции ~5000 выполнений скриптов
+                        <li class="fragment">Java 7, though
+                        <li class="fragment">Let`s see what we can do
+                    </ul>
+                </section>
+                <section>
+                    <h2>Groovy from java bench</h2>
+                    <pre><code data-trim class="java">@BenchmarkMode(value = Mode.Throughput)
+@Warmup(iterations = 4, time = 20, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 8, time = 20, timeUnit = TimeUnit.SECONDS)
+@Fork(4)
+@Threads(8)</code></pre>
+                </section>
+                <section>
+                    <h2>Results</h2>
+                    <table>
+                        <tr>
+                            <td>GroovyJSR223Benchmark</td>
+                            <td>137030.242</td>
+                            <td>op/s</td>
+                        </tr>
+                        <tr>
+                            <td>GroovyShellBenchmark</td>
+                            <td>4101902.557</td>
+                            <td>op/s</td>
+                        </tr>
+                        <tr>
+                            <td>IndyGroovyShellBenchmark</td>
+                            <td>4734100.850</td>
+                            <td>op/s</td>
+                        </tr>
+                    </table>
+                    <a href="https://github.com/d0k1/groovy-eval-bench">more here</a>
+                </section>
+                <section>
+                  <h2>Swap to GroovyShell</h2>
+                  <p>Проверка на той самой типовой операции из Intro</p>
+                  <table>
+                    <thead>
+                      <th>Threads</th>
+                      <th>JSR223</th>
+                      <th>GroovyShell</th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>10</td>
+                        <td>3649</td>
+                        <td>14991</td
+                      </tr>
+                      <tr>
+                        <td>50</td>
+                        <td>20878</td>
+                        <td>78703</td>
+                      </tr>
+                      <tr>
+                        <td>100</td>
+                        <td>41552</td>
+                        <td>158174</td>
+                      </tr>
+                    <tbody>
+                  </table>
+                </section>
+                <section data-background-image="img/wtf.gif">
+                </section>
+                <section>
+                  <h2>Investigate</h2>
+                  <pre><code data-trim class="java">
+                    http-nio-10500-exec-17" #2594 daemon prio=5 os_prio=0 tid=0x00007fdf4c0f4800 nid=0x340a waiting for monitor entry [0x00007fde8a89b000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at groovy.lang.ExpandoMetaClass.performOperationOnMetaClass(ExpandoMetaClass.java:815)
+	- locked <0x000000066516d480> (a groovy.lang.ExpandoMetaClass)
+	at groovy.lang.ExpandoMetaClass.registerInstanceMethod(ExpandoMetaClass.java:879)
+	at groovy.lang.ExpandoMetaClass.setProperty(ExpandoMetaClass.java:794)
+	at org.codehaus.groovy.runtime.InvokerHelper.setProperty(InvokerHelper.java:195)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.setProperty(ScriptBytecodeAdapter.java:484)
+	at script1469016640536691462225.run(script1469016640536691462225.groovy:8)
+	at sun.reflect.GeneratedMethodAccessor337.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:93)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:325)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1215)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1024)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:805)
+	at groovy.lang.GroovyObjectSupport.invokeMethod(GroovyObjectSupport.java:46)
+	at groovy.lang.Script.invokeMethod(Script.java:80)
+</code></pre>
+                </section>
+                <section>
+                  <h2>Legacy stuff</h2>
+                  <pre><code code data-trim class="groovy">
+                    import static org.codehaus.groovy.runtime.InvokerHelper.toMapString;
+def toStr = {
+     delegate.title != null ? delegate.title : delegate.uuid != null
+      ? delegate.uuid : toMapString(delegate, 10)
+}
+java.util.LinkedHashMap.metaClass.toString = toStr
+...
+wrapped.run()
+                  </code><pre>
+                </section>
+                <section>
+                  <h2>fix legacy</h2>
+                  <pre><code data-trim class="groovy">
+                    import static org.codehaus.groovy.runtime.InvokerHelper.toMapString;
+class Init{
+    static
+    {
+       def toStr =
+       {
+           delegate.title != null ? delegate.title : delegate.uuid
+           != null ? delegate.uuid : toMapString(delegate, 10)
+       }
+       java.util.LinkedHashMap.metaClass.toString = toStr
+       ...
+    }
+}
+new Init()
+wrapped.run();
+</code></pre>
+</section>
+                <section>
+                  <h2>Test again</h2>
+                  <table>
+                    <thead>
+                      <th>Threads</th>
+                      <th>JSR223</th>
+                      <th>GroovyShell + legacy fix</th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>10</td>
+                        <td>3649</td>
+                        <td>2752</td
+                      </tr>
+                      <tr>
+                        <td>50</td>
+                        <td>20878</td>
+                        <td>15032</td>
+                      </tr>
+                      <tr>
+                        <td>100</td>
+                        <td>41552</td>
+                        <td>30263</td>
+                      </tr>
+                    <tbody>
+                  </table>
+                </section>
+                <section>
+                  <h2>Alrighty!</h2>
+                  <ul>
+                    <li class="fragment">JSR223 away!
+                    <li class="fragment">Faster!
+                    <li class="fragment"><font color="red">Groovy still leaks  (╯°□°）╯︵ ┻━┻</font>
+                  </ul>
+                </section>
+                <section>
+                  <h2>Why?!</h2>
+                  Groovy - любознательный, и знает всё
+                  <ul>
+                    <li class="fragment">О всех классах</li>
+                    <li class="fragment">О всех методах классов</li>
+                  </ul>
+                </section>
+                <section>
+                  <h2>ClassInfo</h2>
+                  <pre><code class="java">
+              public class ClassInfo {
+                ...
+                private final Class klazz; //класс скрипта
+                private MetaClass strongMetaClass;//знает все методы
+                private ManagedReference&ltMetaClass&gt weakMetaClass;
+                ...
+              }
+                  </code></pre>
+                  <p class="fragment">Хранится всё это в GroovyClassValue</p>
+                </section>
+                <section>
+                  <h2>Consequences</h2>
+                  <img src="img/scriptClassInfo.png">
+                </section>
+                <section>
+                  <h2>Consequences</h2>
+                  <img src="img/scriptClassInfo.png">
+                </section>
+                <section>
+                  <h2>Consequences</h2>
+                  <img src="img/alotScriptClasses.png">
+                  <p>В данном примере 3300 таких</p>
+                </section>
+                <section>
+                  <h2>Groovy templates</h2>
+                  <pre><code class=groovy>
+                  def bindings = ['userName':'DC#2017']
+                  print new SimpleTemplateEngine()
+                  .createTemplate('Hello, ${userName}')
+                  .make(bindings)
+                  </code></pre>
+                </section>
+                <section>
+                  <h2>Template under the hood</h2>
+                  <pre><code class="groovy">
+public class SimpleTemplateEngine {
+  ...
+  public Template createTemplate(Reader reader) {
+        ...
+
+        template.script = groovyShell.
+        parse(script, "SimpleTemplateScript" + counter++ + ".groovy");
+
+        ...
+  }
+  ...
+}
+                  </code></pre>
+                <p class="fragment">Новенький класс!</p>
+                </section>
+                <section>
+                  <h2>In the heap</h2>
+                  <img src="img/SimpleTemplate.png" />
+                  <img src="img/templateClassValue.png" />
+                  <p>Такая же картина как и ранее</p>
+                </section>
+                <section>
+                  <h2>Solution</h2>
+                  <p>Чистим ссылки сами</p>
+                  <pre><code class="java">
+private void removeGroovyClass(final Class<?> scriptClass,
+                            final MetaClassRegistry metaClassRegistry)
+{
+    metaClassRegistry.removeMetaClass(scriptClass);
+    groovyGlobalClassValue.remove(scriptClass);
+    Introspector.flushFromCaches(scriptClass);
+}
+                  </code></pre>
+                  <p class="fragment">И обновляем груви когда выходит новая версия</p>
+                </section>
+                <section>
+                  <h2>JSFlight experience</h2>
+                </section>
+                <section>
+                  <h2>JSFlight</h2>
+                  <ul>
+                  <li class="fragment">GStringTemplateEngine для обработки URL
+                  <li class="fragment">30G памяти виртуалке, на которой запущен сервер
+                  <li class="fragment">За несколько часов работы создается 30 миллионов новых классов
+                  <li class="fragment">Velocity saves the day!
+                  <li class="fragment">Теперь у виртуалки 3G памяти
+                  </ul>
+                </section>
+                <section>
+                  <h1>THX!</h1>
+                </section>
+            </div>
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+
+            // Full list of configuration options available at:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: false,
+                progress: true,
+                history: true,
+                center: true,
+                slideNumber: true,
+
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Optional reveal.js plugins
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true },
+                    { src: 'plugin/notes/notes.js', async: true }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
