@@ -58,6 +58,8 @@
 
 .reveal pre code {
     overflow: hidden;
+    height: 100%;
+    width: 100%;
 }
 
 .reveal .footer {
@@ -91,6 +93,9 @@
                 </section>
                 <section>
                     <h2>SD4 Experience</h2>
+                </section>
+                <section>
+                  <h2>Groovy + SD = 💕</h2>
                 </section>
                 <section>
                   <h2>A long time ago in a galaxy far, far away...</h2>
@@ -129,7 +134,58 @@
 @Threads(8)</code></pre>
                 </section>
                 <section>
+                  <h2>Bench:script</h2>
+                  <p>SimpleScript.groovy</p>
+                  <pre><code data-trim class="groovy">
+import static java.lang.Math.PI
+
+def a = 10.25;
+def b = 2;
+def x = 122;
+def y = a * x + b + (key * PI);
+return y;
+                  </code></pre>
+                </section>
+                <section>
+                  <h2>JSR223 example</h2>
+                  <pre><code data-trim class="java">
+String simpleScriptBody;
+try (InputStream is = GroovyShellExample.class.getClassLoader()
+    .getResourceAsStream("SimpleScript.groovy"))
+{
+  simpleScriptBody = IOUtils.toString(is, "UTF-8");
+}
+ScriptEngineManager engineManager = new ScriptEngineManager();
+ScriptEngine engine = engineManager.getEngineByName("groovy");
+CompiledScript script = ((Compilable) (engine)).compile(simpleScriptBody);
+
+Bindings bindings = new SimpleBindings();
+bindings.put("key", 123L);
+
+SimpleScriptContext ctx = new SimpleScriptContext();
+ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
+System.out.println(script.eval(ctx));
+                  </code></pre>
+                </section>
+                <section>
+                  <h2>GroovyShell example</h2>
+                  <pre><code data-trim class="java">
+String simpleScriptBody;
+try (InputStream is = GroovyShellExample.class.getClassLoader()
+    .getResourceAsStream("SimpleScript.groovy"))
+{
+  simpleScriptBody = IOUtils.toString(is, "UTF-8");
+}
+GroovyShell shell = new GroovyShell();
+Script script = shell.parse(simpleScriptBody);
+script.setProperty("key", 123L);
+System.out.println(script.run());
+                  </code></pre>
+                </section>
+                <section>
                     <h2>Results</h2>
+                    <p>Больше - лучше</p>
                     <table>
                         <tr>
                             <td>GroovyJSR223Benchmark</td>
@@ -149,9 +205,12 @@
                     </table>
                     <a href="https://github.com/d0k1/groovy-eval-bench">more here</a>
                 </section>
+
+                <section data-background-image="img/wtf.gif">
+                </section>
                 <section>
                   <h2>Swap to GroovyShell</h2>
-                  <p>Проверка на той самой типовой операции большого клиента</p>
+                  <p>Измерение времени выполнения операции с ~5000 вызовов скрипов, ms</p>
                   <table>
                     <thead>
                       <th>Threads</th>
@@ -177,8 +236,7 @@
                     <tbody>
                   </table>
                 </section>
-                <section data-background-image="img/wtf.gif">
-                </section>
+
                 <section>
                   <h2>Investigate</h2>
                   <pre><code data-trim class="java">
@@ -205,7 +263,7 @@
                 </section>
                 <section>
                   <h2>Legacy stuff</h2>
-                  <pre><code code data-trim class="groovy">
+                  <pre><code data-trim class="groovy">
                     import static org.codehaus.groovy.runtime.InvokerHelper.toMapString;
 def toStr = {
      delegate.title != null ? delegate.title : delegate.uuid != null
@@ -298,29 +356,30 @@ wrapped.run();
                 </section>
                 <section>
                   <h2>Repercussion</h2>
+                  <img src="img/alotScriptClasses.png">
+                  <p>В данном примере 3300 таких</p>
+                </section>
+                <section>
+                  <h2>Repercussion</h2>
                   <img src="img/scriptClassInfo.png">
                 </section>
                 <section>
                   <h2>Repercussion</h2>
                   <img src="img/cachedMethod.png">
                 </section>
-                <section>
-                  <h2>Repercussion</h2>
-                  <img src="img/alotScriptClasses.png">
-                  <p>В данном примере 3300 таких</p>
-                </section>
+
                 <section>
                   <h2>Groovy templates</h2>
-                  <pre><code class=groovy>
-                  def bindings = ['userName':'DC#2017']
-                  print new SimpleTemplateEngine()
-                  .createTemplate('Hello, ${userName}')
-                  .make(bindings)
+                  <pre style="font-size:26pt"><code data-trim class=groovy>
+def bindings = ['userName':'DC#2017']
+print new SimpleTemplateEngine()
+.createTemplate('Hello, ${userName}')
+.make(bindings)
                   </code></pre>
                 </section>
                 <section>
                   <h2>Template under the hood</h2>
-                  <pre><code class="groovy">
+                  <pre><code data-trim class="groovy">
 public class SimpleTemplateEngine {
   ...
   public Template createTemplate(Reader reader) {
@@ -334,7 +393,7 @@ public class SimpleTemplateEngine {
   ...
 }
                   </code></pre>
-                <p class="fragment">Новенький класс!</p>
+                <!-- <p class="fragment">Новенький класс!</p> -->
                 </section>
                 <section>
                   <h2>In the heap</h2>
